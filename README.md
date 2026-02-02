@@ -6,7 +6,7 @@
 
 ## 🌤 About the Project
 
-**SÖZ JUMPER** is a lightweight 2D mobile platformer inspired by classic vertical jump games like *Doodle Jump*.  
+**Asyl Söz** is a lightweight 2D mobile platformer inspired by classic vertical jump games like *Doodle Jump*.  
 Instead of collecting coins or power-ups, the player collects **Kazakh words** — turning movement into a calm and playful cultural experience.
 
 The game is designed to introduce the Kazakh language **softly and intuitively**, without quizzes, pressure, or explicit lessons.
@@ -60,18 +60,6 @@ This project explores how games can be used not to *teach*, but to help players 
 
 - Android (planned)
 - iOS (planned)
-
----
-
-## 🚧 Project Status
-
-Early prototype / learning project.  
-The project is actively evolving and is used as an exploration of:
-
-- mobile game design
-- cultural representation in games
-- soft educational mechanics
-- Unity 2D architecture
 
 ---
 
