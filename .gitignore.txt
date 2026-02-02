@@ -1,0 +1,81 @@
+# =========================
+# Unity generated folders
+# =========================
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+
+# Addressables & AssetBundles
+[Aa]ssets/AddressableAssetsData/*/*.bin*
+[Aa]ssets/StreamingAssets/aa/
+
+# =========================
+# User-specific files
+# =========================
+*.csproj
+*.sln
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.unityproj
+*.VC.db
+
+# Rider / VS / VSCode
+.idea/
+.vscode/
+.vs/
+
+# =========================
+# Unity cache
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Crash reports
+# =========================
+sysinfo.txt
+
+# =========================
+# Android
+# =========================
+*.apk
+*.aab
+*.keystore
+*.jks
+*.gradle
+.gradle/
+AndroidBuild/
+androidBuild/
+
+# =========================
+# iOS / Xcode
+# =========================
+*.xcworkspace
+*.xcodeproj
+*.xcuserstate
+*.xcuserdata
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.hmap
+DerivedData/
+Pods/
+Podfile.lock
+
+# =========================
+# IL2CPP & builds
+# =========================
+Il2CppBuildCache/
+
+# =========================
+# Logs
+# =========================
+*.log

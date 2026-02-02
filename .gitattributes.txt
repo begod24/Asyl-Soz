@@ -1,0 +1,52 @@
+# =========================
+# Unity YAML files
+# =========================
+*.unity text merge=unityyamlmerge eol=lf
+*.prefab text merge=unityyamlmerge eol=lf
+*.asset text merge=unityyamlmerge eol=lf
+*.mat text merge=unityyamlmerge eol=lf
+*.anim text merge=unityyamlmerge eol=lf
+*.controller text merge=unityyamlmerge eol=lf
+*.overrideController text merge=unityyamlmerge eol=lf
+
+# =========================
+# Meta files (CRITICAL)
+# =========================
+*.meta text eol=lf
+
+# =========================
+# Scripts
+# =========================
+*.cs text diff=csharp eol=lf
+
+# =========================
+# Text & configs
+# =========================
+*.json text eol=lf
+*.xml text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# =========================
+# Binary assets
+# =========================
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.psd binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.fbx binary
+*.blend binary
+*.ttf binary
+*.otf binary
+
+# =========================
+# Mobile builds
+# =========================
+*.apk binary
+*.aab binary
+*.ipa binary
