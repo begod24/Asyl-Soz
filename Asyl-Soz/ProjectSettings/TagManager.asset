@@ -13,7 +13,7 @@ TagManager:
   - Water
   - UI
   - Platform
-  - 
+  - Gameplay
   - 
   - 
   - 
@@ -41,6 +41,12 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 3278177431
+    locked: 0
+  - name: Gameplay
+    uniqueID: 3926411105
     locked: 0
   m_RenderingLayers:
   - Default
