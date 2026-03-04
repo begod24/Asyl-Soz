@@ -9,6 +9,9 @@ public class GameOverController : MonoBehaviour
     [UnityEngine.SerializeField] private Camera cam;
     [UnityEngine.SerializeField] private ScoreManager scoreManager;
 
+    [Header("Health (optional)")]
+    [UnityEngine.SerializeField] private PlayerHealth playerHealth;
+
     [Header("Game Over Settings")]
     [Tooltip("Game over if player goes this far below camera.")]
     [UnityEngine.SerializeField] private float fallLimit = 8f;
@@ -33,10 +36,28 @@ public class GameOverController : MonoBehaviour
         if (scoreManager == null)
             scoreManager = FindObjectOfType<ScoreManager>();
 
+        // Find PlayerHealth if not assigned
+        if (playerHealth == null && player != null)
+            playerHealth = player.GetComponent<PlayerHealth>();
+
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
-        Time.timeScale = 1f;
 
+        // Ensure unpaused at scene start
+        Time.timeScale = 1f;
+    }
+
+    private void OnEnable()
+    {
+        // Subscribe to death
+        if (playerHealth != null)
+            playerHealth.OnDied += OnPlayerDied;
+    }
+
+    private void OnDisable()
+    {
+        if (playerHealth != null)
+            playerHealth.OnDied -= OnPlayerDied;
     }
 
     private void Update()
@@ -50,11 +71,17 @@ public class GameOverController : MonoBehaviour
             TriggerGameOver();
     }
 
+    private void OnPlayerDied()
+    {
+        if (isGameOver) return;
+        TriggerGameOver();
+    }
+
     private void TriggerGameOver()
     {
         isGameOver = true;
 
-        // Freeze time (optional)
+        // Freeze time
         Time.timeScale = 0f;
 
         if (gameOverPanel != null)
@@ -72,6 +99,9 @@ public class GameOverController : MonoBehaviour
 
     public void Restart()
     {
+        // IMPORTANT: clear saved HP so you don't restart with 0 or old value
+        PlayerHealth.ClearSavedHealth();
+
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
