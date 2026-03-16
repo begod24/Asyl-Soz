@@ -124,9 +124,9 @@ Scripts/
 
 | Issue | Location | Suggestion |
 |---|---|---|
-| **Inconsistent indentation** in `TakeDamage()` | `PlayerHealth.cs:41-57` | The method body uses different indentation than the rest of the file. Normalize to 4-space or 1-tab consistently. |
+| **Inconsistent indentation** in `TakeDamage()` | `PlayerHealth.cs:41-57` | The method body uses different indentation than the rest of the file. The project predominantly uses 4-space indentation — normalize `TakeDamage()` to match. |
 | **Redundant `UnityEngine.` prefix** on `[SerializeField]` | Multiple scripts | `[UnityEngine.SerializeField]` is unnecessary when `using UnityEngine;` is already at the top. Replace with `[SerializeField]`. |
-| **File names don't match class names** | `DamageOnTouch.cs` → `DamageOnTouch2D`, `HealthPickup.cs` → `HealthPickup2D`, `PlatformMoving.cs` → `MovingPlatform`, `HealthUI.cs` → `HeartsUI`, `SeamlessBackground.cs` → `SeamlessBackgroundY` | File names should match their class names. This is a Unity convention and avoids confusion. |
+| **File names don't match class names** | `DamageOnTouch.cs` → `DamageOnTouch2D`, `HealthPickup.cs` → `HealthPickup2D`, `PlatformMoving.cs` → `MovingPlatform`, `HealthUI.cs` → `HeartsUI`, `SeamlessBackground.cs` → `SeamlessBackgroundY` | Rename the files to match their class names (e.g., rename `DamageOnTouch.cs` to `DamageOnTouch2D.cs`). In Unity, mismatched file/class names can cause serialization issues and make scripts harder to locate. |
 | **Comments in Russian** | `PlayerHealth.cs:88, 103`, `PlayerJumpController.cs:23` | Use English for code comments to keep the codebase accessible to all contributors. |
 | **Debug.Log left in production code** | `DamageOnTouch.cs:20`, `PlayerHealth.cs:50,54`, `MainMenuController.cs` (everywhere) | Wrap debug logging in `#if UNITY_EDITOR` or use a centralized logging utility, so logs don't appear in release builds. |
 | **Magic numbers** | `PlatformSpawner.cs:142` (`1.4f`), `PlatformSpawner.cs:185-186` (`0.22f`, `0.18f`) | Extract to named constants or `[SerializeField]` fields with descriptive names. |
@@ -155,7 +155,7 @@ Scripts/
 
 | Issue | Location | Suggestion |
 |---|---|---|
-| **Division by zero risk** | `PlayerMobileMove2D.cs:86` — `Screen.width * dragSensitivity` | If `dragSensitivity` is 0, this divides by zero. Add a guard or clamp `dragSensitivity` to a minimum. |
+| **Division by zero risk** | `PlayerMobileMove2D.cs:86` — `deltaX / (Screen.width * dragSensitivity)` | If `dragSensitivity` is set to 0 in the Inspector, this expression divides by zero. Add a guard: clamp `dragSensitivity` to a minimum (e.g., `0.01f`) in `Awake()`. |
 | **Gravity fallback hides misconfiguration** | `PlatformSpawner.cs:134` | The fallback `gravity = 9.81f` silently masks a missing Rigidbody2D gravity scale. Consider logging a warning. |
 | **No `maxHealth` validation** | `PlayerHealth.cs` | If `maxHealth` is set to 0 or negative in the Inspector, the health system breaks silently. Validate in `Awake()`. |
 
