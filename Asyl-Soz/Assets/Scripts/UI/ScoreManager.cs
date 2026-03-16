@@ -4,15 +4,15 @@ using TMPro;
 public class ScoreManager : MonoBehaviour
 {
     [Header("References")]
-    [UnityEngine.SerializeField] private Transform player;
+    [SerializeField] private Transform player;
 
     [Header("UI")]
-    [UnityEngine.SerializeField] private TMP_Text scoreText;
-    [UnityEngine.SerializeField] private TMP_Text bestText;
+    [SerializeField] private TMP_Text scoreText;
+    [SerializeField] private TMP_Text bestText;
 
     [Header("Scoring")]
     [Tooltip("If true: score is measured from starting Y. If false: raw player Y.")]
-    [UnityEngine.SerializeField] private bool useStartOffset = true;
+    [SerializeField] private bool useStartOffset = true;
 
     private float startY;
     private float bestScore;
@@ -45,14 +45,22 @@ public class ScoreManager : MonoBehaviour
         if (currentScore > bestScore)
         {
             bestScore = currentScore;
-            PlayerPrefs.SetFloat(BestKey, bestScore);
-            PlayerPrefs.Save();
             UpdateBestUI(bestScore);
         }
     }
 
     public float CurrentScore => currentScore;
     public float BestScore => bestScore;
+
+    /// <summary>
+    /// Persists the best score to PlayerPrefs. Call on game-over or scene change —
+    /// NOT every frame — to avoid file-write hitches on mobile.
+    /// </summary>
+    public void SaveBestScore()
+    {
+        PlayerPrefs.SetFloat(BestKey, bestScore);
+        PlayerPrefs.Save();
+    }
 
     public void ResetStartY()
     {

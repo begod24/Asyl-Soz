@@ -5,21 +5,21 @@ using TMPro;
 public class GameOverController : MonoBehaviour
 {
     [Header("References")]
-    [UnityEngine.SerializeField] private Transform player;
-    [UnityEngine.SerializeField] private Camera cam;
-    [UnityEngine.SerializeField] private ScoreManager scoreManager;
+    [SerializeField] private Transform player;
+    [SerializeField] private Camera cam;
+    [SerializeField] private ScoreManager scoreManager;
 
     [Header("Health (optional)")]
-    [UnityEngine.SerializeField] private PlayerHealth playerHealth;
+    [SerializeField] private PlayerHealth playerHealth;
 
     [Header("Game Over Settings")]
     [Tooltip("Game over if player goes this far below camera.")]
-    [UnityEngine.SerializeField] private float fallLimit = 8f;
+    [SerializeField] private float fallLimit = 8f;
 
     [Header("UI")]
-    [UnityEngine.SerializeField] private GameObject gameOverPanel;
-    [UnityEngine.SerializeField] private TMP_Text finalScoreText;
-    [UnityEngine.SerializeField] private TMP_Text finalBestText;
+    [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private TMP_Text finalScoreText;
+    [SerializeField] private TMP_Text finalBestText;
 
     private bool isGameOver;
 
@@ -81,7 +81,14 @@ public class GameOverController : MonoBehaviour
     {
         isGameOver = true;
 
-        // Freeze time
+        // Save HP before freezing — batched save instead of per-damage save
+        if (playerHealth != null)
+            playerHealth.SaveHealth();
+
+        // Persist best score at game-over (instead of every frame)
+        if (scoreManager != null)
+            scoreManager.SaveBestScore();
+
         Time.timeScale = 0f;
 
         if (gameOverPanel != null)

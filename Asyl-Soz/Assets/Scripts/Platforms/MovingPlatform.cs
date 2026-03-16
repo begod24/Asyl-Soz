@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class MovingPlatform : MonoBehaviour
 {
-    [UnityEngine.SerializeField] private float moveDistance = 2f;
-    [UnityEngine.SerializeField] private float moveSpeed = 1.5f;
+    [SerializeField] private float moveDistance = 2f;
+    [SerializeField] private float moveSpeed = 1.5f;
 
     private Vector3 startPos;
     private float timer;

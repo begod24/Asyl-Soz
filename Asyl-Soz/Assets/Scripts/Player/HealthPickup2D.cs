@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class HealthPickup2D : MonoBehaviour
 {
-    [UnityEngine.SerializeField] private int healAmount = 1;
-    [UnityEngine.SerializeField] private bool rotate = true;
-    [UnityEngine.SerializeField] private float rotateSpeed = 90f;
+    [SerializeField] private int healAmount = 1;
+    [SerializeField] private bool rotate = true;
+    [SerializeField] private float rotateSpeed = 90f;
 
     private void Update()
     {

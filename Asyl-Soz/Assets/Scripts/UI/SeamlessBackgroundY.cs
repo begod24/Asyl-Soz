@@ -3,16 +3,16 @@ using UnityEngine;
 public class SeamlessBackgroundY : MonoBehaviour
 {
     [Header("References")]
-    [UnityEngine.SerializeField] private Camera cam;
-    [UnityEngine.SerializeField] private SpriteRenderer bgA;
-    [UnityEngine.SerializeField] private SpriteRenderer bgB;
+    [SerializeField] private Camera cam;
+    [SerializeField] private SpriteRenderer bgA;
+    [SerializeField] private SpriteRenderer bgB;
 
     [Header("Behavior")]
     [Tooltip("1 = background moves with camera (locked). < 1 = parallax (slower).")]
-    [UnityEngine.SerializeField] private float parallaxFactor = 1f;
+    [SerializeField] private float parallaxFactor = 1f;
 
     [Tooltip("Extra overlap to hide seams (0.1–0.5).")]
-    [UnityEngine.SerializeField] private float overlap = 0.2f;
+    [SerializeField] private float overlap = 0.2f;
 
     private float spriteHeightWorld;
     private float startCamY;
