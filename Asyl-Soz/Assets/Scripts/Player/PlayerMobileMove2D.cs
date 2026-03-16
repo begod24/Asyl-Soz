@@ -7,24 +7,26 @@ public class PlayerMobileMove2D : MonoBehaviour
     public enum InputMode { Drag, Tilt }
 
     [Header("Mode")]
-    [UnityEngine.SerializeField] private InputMode mode = InputMode.Drag;
+    [SerializeField] private InputMode mode = InputMode.Drag;
 
     [Header("Input Actions")]
-    [UnityEngine.SerializeField] private InputActionReference pointAction; // Pointer/position
-    [UnityEngine.SerializeField] private InputActionReference pressAction; // Pointer/press
-    [UnityEngine.SerializeField] private InputActionReference tiltAction;  // Accelerometer/acceleration
+    [SerializeField] private InputActionReference pointAction; // Pointer/position
+    [SerializeField] private InputActionReference pressAction; // Pointer/press
+    [SerializeField] private InputActionReference tiltAction;  // Accelerometer/acceleration
 
     [Header("Movement")]
-    [UnityEngine.SerializeField] private float moveSpeed = 6f;
+    [SerializeField] private float moveSpeed = 6f;
 
     [Header("Drag")]
-    [UnityEngine.SerializeField] private float dragSensitivity = 0.35f;
+    [SerializeField] private float dragSensitivity = 0.35f;
 
     [Header("Tilt")]
-    [UnityEngine.SerializeField] private float tiltSensitivity = 1.7f;
+    [SerializeField] private float tiltSensitivity = 1.7f;
 
     [Header("Smoothing")]
-    [UnityEngine.SerializeField] private float inputSmoothing = 12f;
+    [SerializeField] private float inputSmoothing = 12f;
+
+    private const float MinDragSensitivity = 0.01f;
 
     private Rigidbody2D rb;
     private Vector2 dragStartPos;
@@ -33,6 +35,7 @@ public class PlayerMobileMove2D : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        dragSensitivity = Mathf.Max(dragSensitivity, MinDragSensitivity);
     }
 
     private void OnEnable()

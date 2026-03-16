@@ -4,12 +4,12 @@ using UnityEngine.UI;
 public class HeartsUI : MonoBehaviour
 {
     [Header("UI")]
-    [UnityEngine.SerializeField] private Image[] hearts; // assign in inspector
-    [UnityEngine.SerializeField] private Sprite fullHeart;
-    [UnityEngine.SerializeField] private Sprite emptyHeart;
+    [SerializeField] private Image[] hearts; // assign in inspector
+    [SerializeField] private Sprite fullHeart;
+    [SerializeField] private Sprite emptyHeart;
 
     [Header("Player")]
-    [UnityEngine.SerializeField] private PlayerHealth playerHealth;
+    [SerializeField] private PlayerHealth playerHealth;
 
     private void Awake()
     {

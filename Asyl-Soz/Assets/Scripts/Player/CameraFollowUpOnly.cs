@@ -3,11 +3,11 @@ using UnityEngine;
 public class CameraFollowUpOnly : MonoBehaviour
 {
     [Header("Target")]
-    [UnityEngine.SerializeField] private Transform target;
+    [SerializeField] private Transform target;
 
     [Header("Follow")]
-    [UnityEngine.SerializeField] private float yOffset = 1.0f;
-    [UnityEngine.SerializeField] private float smoothSpeed = 10f;
+    [SerializeField] private float yOffset = 1.0f;
+    [SerializeField] private float smoothSpeed = 10f;
 
     private float lockedY;
 

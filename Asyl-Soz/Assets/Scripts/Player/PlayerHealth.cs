@@ -1,23 +1,24 @@
 using System;
 using UnityEngine;
 
-public class PlayerHealth : MonoBehaviour
+public class PlayerHealth : MonoBehaviour, IDamageable
 {
     public event Action<int, int> OnHealthChanged; // current, max
     public event Action OnDied;
 
     [Header("Health")]
-    [UnityEngine.SerializeField] private int maxHealth = 3;
-    [UnityEngine.SerializeField] private int startHealth = 3;
+    [SerializeField] private int maxHealth = 3;
+    [SerializeField] private int startHealth = 3;
 
     [Header("I-Frames")]
-    [UnityEngine.SerializeField] private float invulnerableTime = 0.6f;
+    [SerializeField] private float invulnerableTime = 0.6f;
 
     [Header("Save")]
-    [UnityEngine.SerializeField] private bool saveToPlayerPrefs = true;
+    [SerializeField] private bool saveToPlayerPrefs = true;
 
     private int currentHealth;
     private float invulnTimer;
+    private bool isDead;
 
     private const string HealthKey = "CURRENT_HEALTH";
 
@@ -26,6 +27,7 @@ public class PlayerHealth : MonoBehaviour
 
     private void Awake()
     {
+        ValidateConfig();
         LoadHealth();
         Notify();
     }
@@ -38,22 +40,20 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
-    if (amount <= 0) return;
-    if (invulnTimer > 0f) return;
+        if (amount <= 0) return;
+        if (invulnTimer > 0f) return;
+        if (isDead) return;
 
-    currentHealth = Mathf.Max(0, currentHealth - amount);
-    invulnTimer = invulnerableTime;
+        currentHealth = Mathf.Max(0, currentHealth - amount);
+        invulnTimer = invulnerableTime;
 
-    SaveHealth();
-    Notify();
+        Notify();
 
-    Debug.Log($"DAMAGE: -{amount}, HP = {currentHealth}/{maxHealth}");
-
-    if (currentHealth <= 0)
-    {
-        Debug.Log("PLAYER DIED -> OnDied event fired");
-        OnDied?.Invoke();
-    }
+        if (currentHealth <= 0)
+        {
+            isDead = true;
+            OnDied?.Invoke();
+        }
     }
 
     public void Heal(int amount)
@@ -61,20 +61,41 @@ public class PlayerHealth : MonoBehaviour
         if (amount <= 0) return;
 
         currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
-        SaveHealth();
         Notify();
     }
 
     public void ResetToStart()
     {
+        isDead = false;
         currentHealth = Mathf.Clamp(startHealth, 1, maxHealth);
-        SaveHealth();
         Notify();
+    }
+
+    /// <summary>
+    /// Saves current HP to PlayerPrefs. Call on game-over or scene transitions only —
+    /// avoid calling every frame to prevent file-write hitches on mobile.
+    /// </summary>
+    public void SaveHealth()
+    {
+        if (!saveToPlayerPrefs) return;
+        PlayerPrefs.SetInt(HealthKey, currentHealth);
+        PlayerPrefs.Save();
     }
 
     private void Notify()
     {
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
+    private void ValidateConfig()
+    {
+        if (maxHealth <= 0)
+        {
+            Debug.LogError("PlayerHealth: maxHealth must be > 0. Defaulting to 3.");
+            maxHealth = 3;
+        }
+
+        startHealth = Mathf.Clamp(startHealth, 1, maxHealth);
     }
 
     private void LoadHealth()
@@ -84,7 +105,7 @@ public class PlayerHealth : MonoBehaviour
             int saved = PlayerPrefs.GetInt(HealthKey, -1);
             if (saved >= 0)
             {
-                // если вдруг сохранено 0, стартуем как минимум с 1
+                // If saved value is 0, start with at least 1 HP
                 currentHealth = Mathf.Clamp(saved, 1, maxHealth);
                 return;
             }
@@ -93,14 +114,9 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = Mathf.Clamp(startHealth, 1, maxHealth);
     }
 
-    private void SaveHealth()
-    {
-        if (!saveToPlayerPrefs) return;
-        PlayerPrefs.SetInt(HealthKey, currentHealth);
-        PlayerPrefs.Save();
-    }
-
-    // Вызывай перед Restart, чтобы не загрузиться с 0/старым значением
+    /// <summary>
+    /// Call before Restart so we don't load stale or zero HP on the next scene.
+    /// </summary>
     public static void ClearSavedHealth()
     {
         PlayerPrefs.DeleteKey(HealthKey);

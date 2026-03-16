@@ -4,23 +4,23 @@ using UnityEngine;
 public class PlayerJumpController : MonoBehaviour
 {
     [Header("Jump")]
-    [UnityEngine.SerializeField] private float jumpForce = 12f;
+    [SerializeField] private float jumpForce = 12f;
 
     [Header("Landing Check")]
-    [UnityEngine.SerializeField] private bool requireTopLanding = true;
+    [SerializeField] private bool requireTopLanding = true;
 
     [Range(0f, 1f)]
-    [UnityEngine.SerializeField] private float minUpNormal = 0.5f;
+    [SerializeField] private float minUpNormal = 0.5f;
 
     [Header("Wrap Around")]
-    [UnityEngine.SerializeField] private bool wrapAround = true;
+    [SerializeField] private bool wrapAround = true;
 
-    [UnityEngine.SerializeField] private float wrapPadding = 0.5f;
+    [SerializeField] private float wrapPadding = 0.5f;
 
     private Rigidbody2D rb;
     private Camera cam;
 
-    // ✅ Это нужно PlatformSpawner для автокалибровки
+    /// <summary>Exposed for PlatformSpawner jump-height auto-calibration.</summary>
     public float JumpForce => jumpForce;
 
     private void Awake()

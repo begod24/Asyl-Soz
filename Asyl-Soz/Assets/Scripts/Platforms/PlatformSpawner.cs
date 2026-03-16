@@ -1,6 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Procedurally spawns platform rows ahead of the player and despawns them behind the camera.
+///
+/// REFACTORED:
+/// - Difficulty logic moved to DifficultyManager (Single Responsibility).
+/// - Kazakh words auto-spawn on safe platforms using KazakhWordBank.
+/// - Magic numbers replaced with named constants or SerializeField.
+/// - Gravity fallback now logs a warning so misconfiguration is visible.
+/// </summary>
 public class PlatformSpawner : MonoBehaviour
 {
     [Header("References")]
@@ -8,49 +17,34 @@ public class PlatformSpawner : MonoBehaviour
     [SerializeField] private Rigidbody2D playerRb;
     [SerializeField] private Camera cam;
     [SerializeField] private PlayerJumpController jumpController;
+    [SerializeField] private DifficultyManager difficulty;
 
     [Header("Platform Prefabs")]
     [SerializeField] private GameObject normalPlatformPrefab;
     [SerializeField] private GameObject movingPlatformPrefab;
     [SerializeField] private GameObject spikesPlatformPrefab;
 
-    [Header("Health Pickup")]
+    [Header("Pickups")]
     [SerializeField] private GameObject healthPickupPrefab;
+    [SerializeField] private GameObject wordCollectablePrefab;
 
-    [Header("Platform Type Chances (base)")]
-    [Range(0f, 1f)] [SerializeField] private float movingChance = 0.12f;
-    [Range(0f, 1f)] [SerializeField] private float spikesChance = 0.06f;
-
-    [Header("Row Spawning")]
-    [Tooltip("Platform count per row: x = minimum at max difficulty, y = maximum at start.")]
-    [SerializeField] private Vector2Int platformsPerRow = new Vector2Int(1, 3);
-
-    [Tooltip("Minimum horizontal gap between platforms in the same row (world units).")]
-    [SerializeField] private float minXSeparation = 1.8f;
-
-    [Header("Safe Path Rules")]
-    [Tooltip("Each row always contains at least one non-spike platform.")]
-    [SerializeField] private bool guaranteeSafePlatformEachRow = true;
-
-    [Tooltip("Spike platforms are never the only platform in a row.")]
-    [SerializeField] private bool spikesNeverAlone = true;
+    [Header("Word System")]
+    [SerializeField] private KazakhWordBank wordBank;
+    [Range(0f, 1f)]
+    [SerializeField] private float wordSpawnChance = 0.35f;
+    [SerializeField] private float wordYOffset = 0.7f;
 
     [Header("Heart Pickup")]
-    [Range(0f, 1f)] [SerializeField] private float heartChance = 0.10f;
+    [Range(0f, 1f)]
+    [SerializeField] private float heartChance = 0.10f;
     [SerializeField] private float heartYOffset = 0.65f;
 
-    [Header("Difficulty Curve")]
-    [Tooltip("Row gap as a fraction of max jump height at the easiest point.")]
-    [Range(0.2f, 0.6f)] [SerializeField] private float easyRowFraction = 0.40f;
+    [Header("Safe Path Rules")]
+    [SerializeField] private bool guaranteeSafePlatformEachRow = true;
+    [SerializeField] private bool spikesNeverAlone = true;
 
-    [Tooltip("Row gap as a fraction of max jump height at full difficulty.")]
-    [Range(0.6f, 0.92f)] [SerializeField] private float hardRowFraction = 0.82f;
-
-    [Tooltip("Height (world units) at which full difficulty is reached.")]
-    [SerializeField] private float difficultyRampHeight = 300f;
-
-    [Tooltip("Height (world units) with no hazards or moving platforms — lets the player learn the jump.")]
-    [SerializeField] private float gracePeriodHeight = 35f;
+    [Header("Row Layout")]
+    [SerializeField] private float minXSeparation = 1.8f;
 
     [Header("Spawn Settings")]
     [SerializeField] private int initialRows = 12;
@@ -58,17 +52,16 @@ public class PlatformSpawner : MonoBehaviour
     [SerializeField] private float despawnBelow = 14f;
     [SerializeField] private float xPadding = 0.5f;
 
-    // Heart chance multiplier for secondary (non-guaranteed-safe) platforms.
+    // Named constant replaces the old magic number 1.4f
+    private const float StartPlatformOffset = 1.4f;
     private const float SecondaryHeartChanceMultiplier = 0.35f;
-    // Safety cap: row step never exceeds this fraction of max jump height.
-    private const float MaxSafeRowFraction = 0.88f;
 
     private float maxJumpHeight;
     private float highestRowY;
 
-    private readonly List<GameObject> spawnedPlatforms = new();
+    private readonly List<GameObject> spawnedObjects = new();
 
-    // ── Lifecycle ────────────────────────────────────────────────────────────
+    // -- Lifecycle --------------------------------------------------------
 
     private void Awake()
     {
@@ -91,7 +84,7 @@ public class PlatformSpawner : MonoBehaviour
         DespawnBehindCamera();
     }
 
-    // ── Initialization ───────────────────────────────────────────────────────
+    // -- Initialization ----------------------------------------------------
 
     private void ResolveReferences()
     {
@@ -109,6 +102,9 @@ public class PlatformSpawner : MonoBehaviour
             if (playerRb == null) playerRb = player.GetComponent<Rigidbody2D>();
             if (jumpController == null) jumpController = player.GetComponent<PlayerJumpController>();
         }
+
+        if (difficulty == null)
+            difficulty = GetComponent<DifficultyManager>();
     }
 
     private bool ValidateReferences()
@@ -125,13 +121,23 @@ public class PlatformSpawner : MonoBehaviour
             return false;
         }
 
+        if (difficulty == null)
+        {
+            Debug.LogError("PlatformSpawner: DifficultyManager is not assigned. Add it as a sibling component.");
+            return false;
+        }
+
         return true;
     }
 
     private void CalibrateJumpHeight()
     {
         float gravity = Mathf.Abs(Physics2D.gravity.y * playerRb.gravityScale);
-        if (gravity < 0.0001f) gravity = 9.81f;
+        if (gravity < 0.0001f)
+        {
+            Debug.LogWarning("PlatformSpawner: Gravity near zero — using fallback 9.81. Check Rigidbody2D gravity scale.");
+            gravity = 9.81f;
+        }
 
         float jumpVelocity = Mathf.Abs(jumpController.JumpForce);
         maxJumpHeight = (jumpVelocity * jumpVelocity) / (2f * gravity);
@@ -139,7 +145,7 @@ public class PlatformSpawner : MonoBehaviour
 
     private void SpawnInitialPlatforms()
     {
-        float startY = player.position.y - 1.4f;
+        float startY = player.position.y - StartPlatformOffset;
         SpawnSafePlatformAt(new Vector2(0f, startY));
         highestRowY = startY;
 
@@ -147,7 +153,7 @@ public class PlatformSpawner : MonoBehaviour
             SpawnNextRow();
     }
 
-    // ── Spawn Loop ───────────────────────────────────────────────────────────
+    // -- Spawn Loop -------------------------------------------------------
 
     private void SpawnAheadOfPlayer()
     {
@@ -159,77 +165,48 @@ public class PlatformSpawner : MonoBehaviour
     {
         float cameraBottomY = cam.transform.position.y - despawnBelow;
 
-        for (int i = spawnedPlatforms.Count - 1; i >= 0; i--)
+        for (int i = spawnedObjects.Count - 1; i >= 0; i--)
         {
-            if (spawnedPlatforms[i] == null)
+            if (spawnedObjects[i] == null)
             {
-                spawnedPlatforms.RemoveAt(i);
+                spawnedObjects.RemoveAt(i);
                 continue;
             }
 
-            if (spawnedPlatforms[i].transform.position.y < cameraBottomY)
+            if (spawnedObjects[i].transform.position.y < cameraBottomY)
             {
-                Destroy(spawnedPlatforms[i]);
-                spawnedPlatforms.RemoveAt(i);
+                Destroy(spawnedObjects[i]);
+                spawnedObjects.RemoveAt(i);
             }
         }
     }
 
     private void SpawnNextRow()
     {
-        float difficulty = GetDifficulty01(highestRowY);
-        float rowY = highestRowY + ComputeRowStep(difficulty);
-        bool inGracePeriod = rowY < gracePeriodHeight;
+        float diff = difficulty.GetDifficulty(highestRowY);
+        float rowY = highestRowY + difficulty.ComputeRowStep(diff, maxJumpHeight);
+        bool inGracePeriod = difficulty.IsInGracePeriod(rowY);
 
-        // At difficulty=1: moving up to +22%, spikes up to +18%. Both suppressed during grace period.
-        float movingNow = inGracePeriod ? 0f : Mathf.Lerp(movingChance, movingChance + 0.22f, difficulty);
-        float spikesNow = inGracePeriod ? 0f : Mathf.Lerp(spikesChance, spikesChance + 0.18f, difficulty);
+        float movingNow = difficulty.GetMovingChance(diff, inGracePeriod);
+        float spikesNow = difficulty.GetSpikesChance(diff, inGracePeriod);
 
-        int platformCount = ComputePlatformCount(difficulty);
+        int platformCount = difficulty.ComputePlatformCount(diff);
         (float minX, float maxX) = GetCameraXBounds();
         List<float> xPositions = PickRowXPositions(platformCount, minX, maxX);
 
         if (guaranteeSafePlatformEachRow)
-            SpawnRowWithGuaranteedSafe(xPositions, rowY, spikesNow, movingNow, difficulty);
+            SpawnRowWithGuaranteedSafe(xPositions, rowY, spikesNow, movingNow, diff);
         else
-            SpawnRowFree(xPositions, rowY, spikesNow, movingNow);
+            SpawnRowFree(xPositions, rowY, spikesNow, movingNow, diff);
 
         highestRowY = rowY;
     }
 
-    // ── Difficulty Helpers ───────────────────────────────────────────────────
-
-    private float GetDifficulty01(float worldY) =>
-        Mathf.Clamp01(Mathf.Max(0f, worldY) / difficultyRampHeight);
-
-    /// <summary>
-    /// Row step scales from ~40% to ~82% of max jump height as difficulty rises.
-    /// Both the min and max of the random range increase, so gaps grow but remain reachable.
-    /// </summary>
-    private float ComputeRowStep(float difficulty)
-    {
-        float minFraction = Mathf.Lerp(easyRowFraction,        hardRowFraction * 0.88f, difficulty);
-        float maxFraction = Mathf.Lerp(easyRowFraction * 1.35f, hardRowFraction,        difficulty);
-
-        float step = maxJumpHeight * Random.Range(minFraction, maxFraction);
-
-        // Hard cap: never exceed 88% of jump height so the next row is always reachable.
-        return Mathf.Clamp(step, 0.7f, maxJumpHeight * MaxSafeRowFraction);
-    }
-
-    /// <summary>
-    /// Platform count fades from platformsPerRow.y (easy) down to platformsPerRow.x (hard).
-    /// </summary>
-    private int ComputePlatformCount(float difficulty)
-    {
-        int maxCount = Mathf.RoundToInt(Mathf.Lerp(platformsPerRow.y, platformsPerRow.x + 0.5f, difficulty));
-        int minCount = Mathf.Max(1, maxCount - 1);
-        return Random.Range(minCount, maxCount + 1);
-    }
+    // -- Row Spawning -----------------------------------------------------
 
     private void SpawnRowWithGuaranteedSafe(
         List<float> xs, float rowY,
-        float spikesChanceNow, float movingChanceNow, float difficulty)
+        float spikesChanceNow, float movingChanceNow, float diff)
     {
         int safeIndex = Random.Range(0, xs.Count);
 
@@ -240,7 +217,8 @@ public class PlatformSpawner : MonoBehaviour
             if (i == safeIndex)
             {
                 SpawnSafePlatformAt(pos, movingChanceNow);
-                TrySpawnHeartAbove(pos, difficulty);
+                TrySpawnWordAbove(pos);
+                TrySpawnHeartAbove(pos, diff);
             }
             else
             {
@@ -251,14 +229,17 @@ public class PlatformSpawner : MonoBehaviour
                 SpawnPlatform(spawnSpike ? spikesPlatformPrefab : ChooseSafePrefab(movingChanceNow), pos);
 
                 if (!spawnSpike)
-                    TrySpawnHeartAbove(pos, difficulty, SecondaryHeartChanceMultiplier);
+                {
+                    TrySpawnWordAbove(pos);
+                    TrySpawnHeartAbove(pos, diff, SecondaryHeartChanceMultiplier);
+                }
             }
         }
     }
 
     private void SpawnRowFree(
         List<float> xs, float rowY,
-        float spikesChanceNow, float movingChanceNow)
+        float spikesChanceNow, float movingChanceNow, float diff)
     {
         bool spawnedAnySafe = false;
 
@@ -269,15 +250,18 @@ public class PlatformSpawner : MonoBehaviour
 
             SpawnPlatform(spawnSpike ? spikesPlatformPrefab : ChooseSafePrefab(movingChanceNow), pos);
 
-            if (!spawnSpike) spawnedAnySafe = true;
+            if (!spawnSpike)
+            {
+                spawnedAnySafe = true;
+                TrySpawnWordAbove(pos);
+            }
         }
 
-        // Fallback: if every slot rolled as spikes, add a safe platform at the first position.
         if (spikesNeverAlone && !spawnedAnySafe)
             SpawnSafePlatformAt(new Vector2(xs[0], rowY), movingChanceNow);
     }
 
-    // ── Platform Helpers ─────────────────────────────────────────────────────
+    // -- Platform Helpers -------------------------------------------------
 
     private (float min, float max) GetCameraXBounds()
     {
@@ -312,7 +296,6 @@ public class PlatformSpawner : MonoBehaviour
             if (!tooClose) xs.Add(candidate);
         }
 
-        // Fallback: screen is too narrow to fit all platforms with full separation.
         while (xs.Count < count)
             xs.Add(Random.Range(minX, maxX));
 
@@ -336,16 +319,43 @@ public class PlatformSpawner : MonoBehaviour
     {
         if (prefab == null) return;
         var go = Instantiate(prefab, pos, Quaternion.identity, transform);
-        spawnedPlatforms.Add(go);
+        spawnedObjects.Add(go);
     }
 
-    private void TrySpawnHeartAbove(Vector2 platformPos, float difficulty, float chanceMultiplier = 1f)
+    // -- Pickup Helpers ---------------------------------------------------
+
+    private void TrySpawnHeartAbove(Vector2 platformPos, float diff, float chanceMultiplier = 1f)
     {
         if (healthPickupPrefab == null) return;
 
-        float chance = Mathf.Lerp(heartChance, heartChance * 0.6f, difficulty) * chanceMultiplier;
+        float chance = Mathf.Lerp(heartChance, heartChance * 0.6f, diff) * chanceMultiplier;
 
         if (Random.value < chance)
-            Instantiate(healthPickupPrefab, platformPos + Vector2.up * heartYOffset, Quaternion.identity, transform);
+        {
+            var go = Instantiate(healthPickupPrefab, platformPos + Vector2.up * heartYOffset, Quaternion.identity, transform);
+            spawnedObjects.Add(go);
+        }
+    }
+
+    /// <summary>
+    /// Spawns a Kazakh word collectable above the platform.
+    /// Words are picked randomly from KazakhWordBank at runtime,
+    /// making the game endlessly varied without manual placement.
+    /// </summary>
+    private void TrySpawnWordAbove(Vector2 platformPos)
+    {
+        if (wordCollectablePrefab == null || wordBank == null) return;
+        if (Random.value > wordSpawnChance) return;
+
+        KazakhWord word = wordBank.GetRandomWord();
+        if (word == null) return;
+
+        var go = Instantiate(wordCollectablePrefab, platformPos + Vector2.up * wordYOffset, Quaternion.identity, transform);
+
+        var collectable = go.GetComponent<WordCollectable>();
+        if (collectable != null)
+            collectable.Initialize(word);
+
+        spawnedObjects.Add(go);
     }
 }
