@@ -11,15 +11,6 @@ public class HeartsUI : MonoBehaviour
     [Header("Player")]
     [SerializeField] private PlayerHealth playerHealth;
 
-    private void Awake()
-    {
-        if (playerHealth == null)
-        {
-            var p = GameObject.FindGameObjectWithTag("Player");
-            if (p != null) playerHealth = p.GetComponent<PlayerHealth>();
-        }
-    }
-
     private void OnEnable()
     {
         if (playerHealth != null)

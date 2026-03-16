@@ -135,7 +135,7 @@ public class PlatformSpawner : MonoBehaviour
         float gravity = Mathf.Abs(Physics2D.gravity.y * playerRb.gravityScale);
         if (gravity < 0.0001f)
         {
-            Debug.LogWarning("PlatformSpawner: Gravity near zero — using fallback 9.81. Check Rigidbody2D gravity scale.");
+            Debug.LogWarning("PlatformSpawner: Gravity near zero. Using fallback 9.81. Check Rigidbody2D gravity scale.");
             gravity = 9.81f;
         }
 

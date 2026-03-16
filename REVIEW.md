@@ -9,8 +9,8 @@
 | Category | Items |
 |---|---|
 | **Scenes** | `Game.unity`, `MainMenu.unity` |
-| **Prefabs** | `Platform_Normal`, `Platform_Moving`, `PlatformSpikes`, `HealthPickUp` |
-| **Scripts** | 16 C# scripts across 4 folders |
+| **Prefabs** | `Platform_Normal`, `Platform_Moving`, `PlatformSpikes`, `HealthPickUp` (+ `WordCollectable` prefab to create) |
+| **Scripts** | 23 C# scripts across 5 folders (Core, Platforms, Player, UI, Words) |
 | **Art** | `Background.png`, `full.png` / `empty.png` (hearts), `spikes.png` |
 | **Physics** | `NoFriction.physicsMaterial2D` |
 | **Rendering** | URP (Universal Render Pipeline) with 2D Renderer |

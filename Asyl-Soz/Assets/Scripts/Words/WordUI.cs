@@ -22,16 +22,6 @@ public class WordUI : MonoBehaviour
     private float popupTimer;
     private float comboTimer;
 
-    private void Awake()
-    {
-        if (collector == null)
-        {
-            var player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-                collector = player.GetComponent<WordCollector>();
-        }
-    }
-
     private void OnEnable()
     {
         if (collector != null)
