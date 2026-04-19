@@ -53,7 +53,3 @@ This project explores how games can be used not to *teach*, but to help players 
 - iOS (planned)
 
 ---
-
-## Author
-
-Created with Unity as a personal indie project.
