@@ -1,4 +1,4 @@
-# Asyl Söz 
+# Asyl Söz - project frezzed 
 
 *A mobile Unity game inspired by Doodle Jump and the Kazakh language*
 
